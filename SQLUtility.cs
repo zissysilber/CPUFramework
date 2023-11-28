@@ -37,16 +37,32 @@ namespace CPUFramework
         {
             GetDataTable(sqlstatement);
         }
-        public static void DebugPrintDataTable(DataTable dt)
+
+        public static int GetFirstColumnFirstRowValue(string sql)
         {
-            foreach (DataRow r in dt.Rows)
+            int n = 0;
+
+            DataTable dt = GetDataTable(sql);
+            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
             {
-                foreach (DataColumn c in dt.Columns)
+                if (dt.Rows[0][0] != DBNull.Value)
                 {
-                    Debug.Print(c.ColumnName + " = " + r[c.ColumnName].ToString());
+                    int.TryParse(dt.Rows[0][0].ToString(), out n);
+                }
+                                
+            }
+            return n;
+        }
+            public static void DebugPrintDataTable(DataTable dt)
+            {
+                foreach (DataRow r in dt.Rows)
+                {
+                    foreach (DataColumn c in dt.Columns)
+                    {
+                        Debug.Print(c.ColumnName + " = " + r[c.ColumnName].ToString());
+                    }
                 }
             }
         }
     }
-}
 //note
