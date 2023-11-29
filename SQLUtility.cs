@@ -53,7 +53,40 @@ namespace CPUFramework
             }
             return n;
         }
-            public static void DebugPrintDataTable(DataTable dt)
+
+        public static DateTime GetFirstColumnFirstRowDateTime(string sql)
+        {
+            DateTime d = new();
+
+            DataTable dt = GetDataTable(sql);
+            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
+            {
+                if (dt.Rows[0][0] != DBNull.Value)
+                {
+                    DateTime.TryParse(dt.Rows[0][0].ToString(), out d);
+                }
+
+            }
+            return d;
+        }
+
+
+        public static string GetFirstColumnFirstRowString(string sql)
+        {
+            string s = "";
+
+            DataTable dt = GetDataTable(sql);
+            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
+            {
+                if (dt.Rows[0][0] != DBNull.Value)
+                {
+                    s = dt.Rows[0][0].ToString();
+                }
+
+            }
+            return s;
+        }
+        public static void DebugPrintDataTable(DataTable dt)
             {
                 foreach (DataRow r in dt.Rows)
                 {
@@ -65,4 +98,4 @@ namespace CPUFramework
             }
         }
     }
-//note
+
