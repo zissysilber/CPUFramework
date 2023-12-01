@@ -54,22 +54,6 @@ namespace CPUFramework
             return n;
         }
 
-        public static DateTime GetFirstColumnFirstRowDateTime(string sql)
-        {
-            DateTime d = new();
-
-            DataTable dt = GetDataTable(sql);
-            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
-            {
-                if (dt.Rows[0][0] != DBNull.Value)
-                {
-                    DateTime.TryParse(dt.Rows[0][0].ToString(), out d);
-                }
-
-            }
-            return d;
-        }
-
 
         public static string GetFirstColumnFirstRowString(string sql)
         {
