@@ -105,7 +105,7 @@ namespace CPUFramework
             return cmd;
         }
         
-        public static SqlCommand GetTable(SqlCommand cmd)
+        public static DataTable GetTable(SqlCommand cmd)
         {
             DataTable dt = new();
 
@@ -114,7 +114,7 @@ namespace CPUFramework
 
             dt.Load(dr);
 
-            return cmd;
+            return dt;
             
         }
 
