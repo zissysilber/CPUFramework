@@ -70,6 +70,54 @@ namespace CPUFramework
             }
             return s;
         }
+        /*
+         *             DataTable dt = new();
+            SqlConnection conn = new SqlConnection(SQLUtility.ConnectionString);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = "PartyGet";
+
+            conn.Open();
+            
+
+            cmd.Parameters["@All"].Value = 1;
+
+            SqlDataReader dr = cmd.ExecuteReader();
+            dt.Load(dr);
+
+            return dt;
+         */
+        public static SqlCommand GetSQLCommand(string sprocname)
+        {
+            
+            
+            SqlConnection conn = new SqlConnection(SQLUtility.ConnectionString);
+            SqlCommand cmd = new();
+            cmd.Connection = conn;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = sprocname;
+
+            
+            SqlCommandBuilder.DeriveParameters(cmd);
+
+            conn.Open();
+            return cmd;
+        }
+        
+        public static SqlCommand GetTable(SqlCommand cmd)
+        {
+            DataTable dt = new();
+
+            
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            dt.Load(dr);
+
+            return cmd;
+            
+        }
+
         public static void DebugPrintDataTable(DataTable dt)
             {
                 foreach (DataRow r in dt.Rows)
