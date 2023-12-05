@@ -15,7 +15,6 @@ namespace CPUFramework
             {
                 cmd = new SqlCommand(sprocname, conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-
                 conn.Open();
                 SqlCommandBuilder.DeriveParameters(cmd);
             }
@@ -24,6 +23,8 @@ namespace CPUFramework
 
         public static DataTable GetDataTable(SqlCommand cmd)
         {
+            Debug.Print("------------" + Environment.NewLine + cmd.CommandText);
+
             DataTable dt = new();
             using (SqlConnection conn = new SqlConnection(SQLUtility.ConnectionString))
             {
@@ -41,20 +42,7 @@ namespace CPUFramework
         public static DataTable GetDataTable(string sqlstatement) // - take a SQL statement and return a DataTable
         {
             Debug.Print(sqlstatement);
-            DataTable dt = new();
-            SqlConnection conn = new();
-            conn.ConnectionString = ConnectionString;
-            conn.Open();
-
-            var cmd = new SqlCommand();
-            cmd.Connection = conn;
-            cmd.CommandText = sqlstatement;
-            var dr = cmd.ExecuteReader();
-            dt.Load(dr);
-
-            SetAllColumnsAllowNull(dt);
-
-            return dt;
+            return GetDataTable(new SqlCommand(sqlstatement));
         }
 
         private static void SetAllColumnsAllowNull(DataTable dt)
