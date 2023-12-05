@@ -1,13 +1,14 @@
 ﻿using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Text;
 
 namespace CPUFramework
 {
     public class SQLUtility
     {
         public static string ConnectionString = "";
-       
+
         public static SqlCommand GetSqlCommand(string sprocname)
         {
             SqlCommand cmd;
@@ -23,39 +24,38 @@ namespace CPUFramework
 
         public static DataTable GetDataTable(SqlCommand cmd)
         {
-            Debug.Print("------------" + Environment.NewLine + cmd.CommandText);
+
 
             DataTable dt = new();
             using (SqlConnection conn = new SqlConnection(SQLUtility.ConnectionString))
             {
                 conn.Open();
                 cmd.Connection = conn;
+                Debug.Print(GetSQL(cmd));
                 SqlDataReader dr = cmd.ExecuteReader();
                 dt.Load(dr);
             }
 
+
+
             SetAllColumnsAllowNull(dt);
             return dt;
         }
-  
-        
+
+
         public static DataTable GetDataTable(string sqlstatement) // - take a SQL statement and return a DataTable
         {
-            Debug.Print(sqlstatement);
+
             return GetDataTable(new SqlCommand(sqlstatement));
         }
 
-        private static void SetAllColumnsAllowNull(DataTable dt)
-        {
-            foreach (DataColumn c in dt.Columns)
-            {
-                c.AllowDBNull = true;
-            }
-        }
         public static void ExecuteSQL(string sqlstatement)
         {
             GetDataTable(sqlstatement);
         }
+
+
+
 
         public static int GetFirstColumnFirstRowValue(string sql)
         {
@@ -68,7 +68,7 @@ namespace CPUFramework
                 {
                     int.TryParse(dt.Rows[0][0].ToString(), out n);
                 }
-                                
+
             }
             return n;
         }
@@ -87,18 +87,67 @@ namespace CPUFramework
                 }
 
             }
+
             return s;
         }
-        public static void DebugPrintDataTable(DataTable dt)
+
+        private static void SetAllColumnsAllowNull(DataTable dt)
+        {
+            foreach (DataColumn c in dt.Columns)
             {
-                foreach (DataRow r in dt.Rows)
+                c.AllowDBNull = true;
+            }
+        }
+        public static string GetSQL(SqlCommand cmd)
+        {
+            string val = "";
+#if DEBUG
+            StringBuilder sb = new StringBuilder();
+            if (cmd.Connection != null)
+            {
+                sb.AppendLine($"--{cmd.Connection.DataSource}");
+                sb.AppendLine($"use {cmd.Connection.Database}");
+                sb.AppendLine("go");
+
+                if (cmd.CommandType == CommandType.StoredProcedure)
                 {
-                    foreach (DataColumn c in dt.Columns)
+                    sb.AppendLine($"exec {cmd.CommandText}");
+                    int paramcount = cmd.Parameters.Count - 1;
+                    int paramnum = 0;
+                    string comma = ",";
+                    foreach (SqlParameter p in cmd.Parameters)
                     {
-                        Debug.Print(c.ColumnName + " = " + r[c.ColumnName].ToString());
+                        if (p.Direction != ParameterDirection.ReturnValue)
+                        {
+                            if (paramnum == paramcount)
+                            {
+                                comma = "" ;
+                            }
+                            sb.AppendLine($"{p.ParameterName} = {(p.Value == null ? "null" : p.Value.ToString())}{comma}");
+                            
+                        }
+                        paramnum++;
                     }
+                }
+                else
+                {
+                    sb.AppendLine(cmd.CommandText);
+                }
+            }
+            val = sb.ToString();
+#endif
+            return val;
+        }
+        public static void DebugPrintDataTable(DataTable dt)
+        {
+            foreach (DataRow r in dt.Rows)
+            {
+                foreach (DataColumn c in dt.Columns)
+                {
+                    Debug.Print(c.ColumnName + " = " + r[c.ColumnName].ToString());
                 }
             }
         }
     }
+}
 
