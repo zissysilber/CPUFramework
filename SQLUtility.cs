@@ -55,7 +55,7 @@ namespace CPUFramework
                     throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
                 }
             }
-            SetAllColumnsAllowNull(dt);
+                        SetAllColumnsAllowNull(dt);
             return dt;
         }
 
@@ -83,10 +83,9 @@ namespace CPUFramework
             {
                 cmd.Parameters[paramname].Value = value;
             }
-            catch (Exception ex)
-            {
-                throw new Exception(cmd.CommandText + ":" + ex.Message, ex);
-            }
+            catch (Exception ex) {
+                throw new Exception(cmd.CommandText + ":" + ex.Message,ex);
+            } 
         }
 
 
@@ -123,11 +122,11 @@ namespace CPUFramework
                     msg = msg.Substring(0, pos);
                     msg = msg.Replace("_", " ");
                     msg = msg + msgend;
-
-                    if (prefix == "f_")
+                    
+                    if(prefix == "f_")
                     {
                         var words = msg.Split(" ");
-                        if (words.Length > 1)
+                        if(words.Length > 1)
                         {
                             msg = $"Cannot delete {words[0]} because it has a related {words[1]} record.";
                         }
