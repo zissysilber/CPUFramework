@@ -56,7 +56,7 @@ namespace CPUFramework
                     throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
                 }
             }
-                        SetAllColumnsAllowNull(dt);
+            SetAllColumnProperties(dt);
             return dt;
         }
 
@@ -111,7 +111,18 @@ namespace CPUFramework
             GetDataTable(sqlstatement);
         }
 
-        public static void SaveDataRow(DataRow row, string sprocname) {
+        public static void SaveDataTable (DataTable dt, string sprocname)
+        {
+            var rows = dt.Select("", "", DataViewRowState.Added | DataViewRowState.ModifiedCurrent);
+            foreach(DataRow r in rows)
+            {
+                SaveDataRow(r, sprocname, false);
+            }
+            dt.AcceptChanges();
+        }
+
+        public static void SaveDataRow(DataRow row, string sprocname, bool acceptchanges = true)
+        {
             SqlCommand cmd = GetSqlCommand(sprocname);
             foreach (DataColumn col in row.Table.Columns)
             {
@@ -121,11 +132,13 @@ namespace CPUFramework
                     cmd.Parameters[paramname].Value = row[col.ColumnName];
                 }
             }
+
             DoExecuteSQL(cmd, false);
+
 
             foreach (SqlParameter p in cmd.Parameters)
             {
-                
+
                 if (p.Direction == ParameterDirection.InputOutput)
                 {
                     string colname = p.ParameterName.Substring(1);
@@ -136,7 +149,11 @@ namespace CPUFramework
                 }
 
             }
-        
+            if (acceptchanges == true)
+            {
+                row.Table.AcceptChanges();
+            }
+
         }
 
         public static void SetParamValue(SqlCommand cmd, string paramname, object value)
@@ -145,9 +162,10 @@ namespace CPUFramework
             {
                 cmd.Parameters[paramname].Value = value;
             }
-            catch (Exception ex) {
-                throw new Exception(cmd.CommandText + ":" + ex.Message,ex);
-            } 
+            catch (Exception ex)
+            {
+                throw new Exception(cmd.CommandText + ":" + ex.Message, ex);
+            }
         }
 
 
@@ -156,6 +174,7 @@ namespace CPUFramework
             string origmsg = msg;
             string prefix = "ck_";
             string msgend = "";
+            string notnullprefix = "Cannot insert the value NULL into column '";
             if (msg.Contains(prefix) == false)
             {
                 if (msg.Contains("u_"))
@@ -167,6 +186,11 @@ namespace CPUFramework
                 else if (msg.Contains("f_"))
                 {
                     prefix = "f_";
+                }
+                else if (msg.Contains(notnullprefix))
+                {
+                    prefix = notnullprefix;
+                    msgend = " cannot be blank.";
                 }
             }
             if (msg.Contains(prefix))
@@ -184,11 +208,11 @@ namespace CPUFramework
                     msg = msg.Substring(0, pos);
                     msg = msg.Replace("_", " ");
                     msg = msg + msgend;
-                    
-                    if(prefix == "f_")
+
+                    if (prefix == "f_")
                     {
                         var words = msg.Split(" ");
-                        if(words.Length > 1)
+                        if (words.Length > 1)
                         {
                             msg = $"Cannot delete {words[0]} because it has a related {words[1]} record.";
                         }
@@ -232,14 +256,58 @@ namespace CPUFramework
             return s;
         }
 
-        private static void SetAllColumnsAllowNull(DataTable dt)
+        private static void SetAllColumnProperties(DataTable dt)
 
         {
             foreach (DataColumn c in dt.Columns)
             {
                 c.AllowDBNull = true;
+                c.AutoIncrement = false;
             }
         }
+
+        public static int GetValueFromFirstRowAsInt(DataTable dt, string columnname)
+        {
+            int value = 0;
+            if (dt.Rows.Count > 0)
+            {
+                DataRow r = dt.Rows[0];
+                if (r[columnname] != null && r[columnname] is int)
+                {
+                    value = (int)r[columnname];
+                }
+            }
+
+            return value;
+        }
+
+        public static string GetValueFromFirstRowAsString(DataTable dt, string columnname)
+        {
+            string value = "";
+            if (dt.Rows.Count > 0)
+            {
+                DataRow r = dt.Rows[0];
+                if (r[columnname] != null && r[columnname] is string)
+                {
+                    value = (string)r[columnname];
+                }
+            }
+
+            return value;
+        }
+
+        public static bool TableHasChanges(DataTable dt)
+        {
+            bool b = false;
+
+            if (dt.GetChanges() != null)
+            {
+                b = true;
+            }
+
+            return b;
+        }
+
         public static string GetSQL(SqlCommand cmd)
         {
             string val = "";
