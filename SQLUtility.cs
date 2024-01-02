@@ -97,7 +97,6 @@ namespace CPUFramework
 
         public static DataTable GetDataTable(string sqlstatement) // - take a SQL statement and return a DataTable
         {
-
             return DoExecuteSQL(new SqlCommand(sqlstatement), true);
         }
 
