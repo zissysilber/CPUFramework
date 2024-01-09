@@ -50,6 +50,7 @@ namespace CPUFramework
                 {
                     string msg = ParseConstraintMsg(ex.Message);
                     throw new Exception(msg);
+                    //where does this get thrown to so that can show nice message?
                 }
                 catch (InvalidCastException ex)
                 {
@@ -168,7 +169,7 @@ namespace CPUFramework
         }
 
 
-        private static string ParseConstraintMsg(string msg)
+        public static string ParseConstraintMsg(string msg)
         {
             string origmsg = msg;
             string prefix = "ck_";
