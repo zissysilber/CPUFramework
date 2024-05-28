@@ -13,7 +13,7 @@ namespace CPUFramework
 {
     public class bizObject : INotifyPropertyChanged
     {
-        string _tablename = ""; string _getsproc = ""; string _updatesproc = ""; string _deletesproc = "";
+        string _typename = ""; string _tablename = ""; string _getsproc = ""; string _updatesproc = ""; string _deletesproc = "";
         string _primarykeyname = ""; string _primarykeyparamname = "";
         DataTable _datatable = new();
         List<PropertyInfo> _properties = new();
@@ -24,7 +24,8 @@ namespace CPUFramework
         public bizObject()
         {
             Type t = this.GetType();
-            _tablename = t.Name;
+            _typename = t.Name;
+            _tablename = _typename;
             if (_tablename.ToLower().StartsWith("biz")) { _tablename = _tablename.Substring(3); }
             _getsproc = _tablename + "Get";
             _updatesproc = _tablename + "Update";
@@ -77,7 +78,7 @@ namespace CPUFramework
             if (prop != null)
             {
                 object? id = prop.GetValue(this);
-                
+
                 if (id != null)
                 {
                     this.Delete((int)id);
@@ -123,10 +124,18 @@ namespace CPUFramework
         private void SetProp(string propname, object? value)
         {
             var prop = GetProp(propname, false, true);
-            if(prop != null)
+            if (prop != null)
             {
-                if(value == DBNull.Value) { value = null; }
-                prop.SetValue(this, value);
+                if (value == DBNull.Value) { value = null; }
+                try
+                {
+                    prop.SetValue(this, value);
+                }
+                catch (Exception ex)
+                {
+                    string msg = $"{_typename}.{prop.Name} is being set to {value?.ToString()} and that is wrong data type. {ex.Message}";
+                    throw new CPUDevException(msg, ex);
+                }
             }
         }
         private PropertyInfo? GetProp(string propname, bool forread, bool forwrite)
