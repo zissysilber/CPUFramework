@@ -54,19 +54,35 @@ namespace CPUFramework
             foreach (DataColumn col in dr.Table.Columns)
             {
                 var prop = GetProp(col.ColumnName, false, true);
-                if (prop != null)
-                {
-                    prop.SetValue(this, dr[col.ColumnName]);
-                }
+                SetProp(col.ColumnName, dr[col.ColumnName]);
             }
+        }
+
+        public void Delete(int id)
+        {
+            SqlCommand cmd = SQLUtility.GetSqlCommand(_deletesproc);
+            SQLUtility.SetParamValue(cmd, _primarykeyparamname, id);
+            SQLUtility.ExecuteSQL(cmd);
         }
         public void Delete(DataTable datatable)
         {
             int id = (int)datatable.Rows[0][_primarykeyname];
-            SqlCommand cmd = SQLUtility.GetSqlCommand(_deletesproc);
-            SQLUtility.SetParamValue(cmd, _primarykeyparamname, id);
-            SQLUtility.ExecuteSQL(cmd);
+            this.Delete(id);
 
+        }
+
+        public void Delete()
+        {
+            PropertyInfo? prop = GetProp(_primarykeyname, true, false);
+            if (prop != null)
+            {
+                object? id = prop.GetValue(this);
+                
+                if (id != null)
+                {
+                    this.Delete((int)id);
+                }
+            }
         }
 
         public void Save()
@@ -77,7 +93,9 @@ namespace CPUFramework
                 var prop = GetProp(param.ParameterName, true, false);
                 if (prop != null)
                 {
-                    param.Value = prop.GetValue(this);
+                    object? val = prop.GetValue(this);
+                    if (val == null) { val = DBNull.Value; }
+                    param.Value = val;
                 }
             }
             SQLUtility.ExecuteSQL(cmd);
@@ -85,11 +103,7 @@ namespace CPUFramework
             {
                 if (param.Direction == ParameterDirection.InputOutput)
                 {
-                    var prop = GetProp(param.ParameterName, false, true);
-                        if (prop != null)
-                    {
-                        prop.SetValue(this, param.Value);
-                    }
+                    SetProp(param.ParameterName, param.Value);
                 }
             }
         }
@@ -105,10 +119,20 @@ namespace CPUFramework
             SQLUtility.SaveDataRow(r, _updatesproc);
 
         }
+
+        private void SetProp(string propname, object? value)
+        {
+            var prop = GetProp(propname, false, true);
+            if(prop != null)
+            {
+                if(value == DBNull.Value) { value = null; }
+                prop.SetValue(this, value);
+            }
+        }
         private PropertyInfo? GetProp(string propname, bool forread, bool forwrite)
         {
             propname = propname.ToLower();
-            if (propname.StartsWith("@")) { propname.Substring(1); }
+            if (propname.StartsWith("@")) { propname = propname.Substring(1); }
             PropertyInfo? prop = _properties.FirstOrDefault(p =>
             p.Name.ToLower() == propname
             && (forread == false || p.CanRead == true)
